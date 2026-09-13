@@ -28,6 +28,11 @@ void property_override(char const prop[], char const value[], bool add)
     auto pi = (prop_info *) __system_property_find(prop);
 
     if (pi != nullptr) {
+        char current_value[PROP_VALUE_MAX] = {0};
+        __system_property_read(pi, nullptr, current_value);
+        if (strcmp(current_value, value) == 0) {
+            return;
+        }
         __system_property_update(pi, value, strlen(value));
     } else if (add) {
         __system_property_add(prop, strlen(prop), value, strlen(value));
@@ -54,13 +59,14 @@ void load_dalvik_properties() {
         heapminfree = "8m";
         heapmaxfree = "32m";
     } else if (sys.totalram >= 3ull * 1024 * 1024 * 1024) {
-        // from - phone-xhdpi-4096-dalvik-heap.mk
+        // from - phone-xhdpi-6144-dalvik-heap.mk (gaming-optimized for 4GB + zRAM)
+        // BGMI allocates ~200-250MB heap; 256m prevents GC storms in endgame
         heapstartsize = "8m";
-        heapgrowthlimit = "192m";
+        heapgrowthlimit = "256m";
         heapsize = "512m";
-        heaptargetutilization = "0.6";
+        heaptargetutilization = "0.5";
         heapminfree = "8m";
-        heapmaxfree = "16m";
+        heapmaxfree = "32m";
     } else {
         return;
     }

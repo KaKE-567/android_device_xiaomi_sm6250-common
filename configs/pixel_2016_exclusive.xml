@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2021-2026 The LineageOS Project
+    Feature flags for Google Photos unlimited original quality backup (Pixel XL)
+-->
+<permissions>
+    <feature name="com.google.android.apps.photos.NEXUS_PRELOAD" />
+    <feature name="com.google.android.apps.photos.nexus_preload" />
+    <feature name="com.google.android.feature.PIXEL_2016_EXPERIENCE" />
+    <feature name="com.google.android.feature.PIXEL_EXPERIENCE" />
+</permissions>

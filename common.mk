@@ -62,17 +62,16 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.audio.low_latency.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.audio.low_latency.xml \
     frameworks/native/data/etc/android.software.midi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.midi.xml
 
-# Component override
+# Component override & Google Photos Unlimited Features
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/component-overrides.xml:$(TARGET_COPY_OUT_VENDOR)/etc/sysconfig/component-overrides.xml \
-    $(LOCAL_PATH)/configs/component-overrides_qti.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/sysconfig/component-overrides.xml
+    $(LOCAL_PATH)/configs/component-overrides_qti.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/sysconfig/component-overrides.xml \
+    $(LOCAL_PATH)/configs/pixel_2016_exclusive.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/pixel_2016_exclusive.xml \
+    $(LOCAL_PATH)/configs/pixel_2016_exclusive.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/pixel_2016_exclusive.xml \
+    $(LOCAL_PATH)/configs/nexus.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/sysconfig/nexus.xml \
+    $(LOCAL_PATH)/configs/nexus.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/nexus.xml
 
-# FM
-PRODUCT_PACKAGES += \
-    FM2 \
-    libqcomfm_jni \
-    qcom.fmradio \
-    qcom.fmradio.xml
+TARGET_EXCLUDES_AUDIOFX := true
 
 # AVB
 PRODUCT_PACKAGES += \
@@ -83,8 +82,9 @@ PRODUCT_PACKAGES += \
 # Bluetooth
 PRODUCT_PACKAGES += \
     audio.bluetooth.default \
-    libbthost_if \
-    BluetoothQti
+    libbluetooth_qti \
+    libbluetooth_qti_jni \
+    libbtconfigstore
 
 PRODUCT_PACKAGES += \
     android.hardware.bluetooth.audio@2.0-impl \
@@ -99,11 +99,31 @@ PRODUCT_COPY_FILES += \
 # Boot animation
 TARGET_SCREEN_HEIGHT := 2400
 TARGET_SCREEN_WIDTH := 1080
+TARGET_BOOTANIMATION := device/xiaomi/sm6250-common/bootanimation/bootanimation.zip
+
+PRODUCT_COPY_FILES += \
+    $(TARGET_BOOTANIMATION):$(TARGET_COPY_OUT_PRODUCT)/media/bootanimation.zip \
+    $(TARGET_BOOTANIMATION):$(TARGET_COPY_OUT_PRODUCT)/media/bootanimation-dark.zip
+
+# Gboard (Google Keyboard)
+PRODUCT_PACKAGES += \
+    Gboard
+
+# Ensure LatinIME is excluded
+PRODUCT_PACKAGES := $(filter-out LatinIME,$(PRODUCT_PACKAGES))
 
 # Camera
 PRODUCT_PACKAGES += \
-    libgui_vendor \
-    Snap
+    libgui_vendor
+
+# Inherit Leica Camera 5.0 Universal
+$(call inherit-product, device/xiaomi/sm6250-common/leica/leica.mk)
+
+# BiTGApps Core (Android 11 ARM64)
+$(call inherit-product-if-exists, vendor/bitgapps/bitgapps.mk)
+
+# Ensure default LineageOS cameras (Snap and Camera2) are excluded
+PRODUCT_PACKAGES := $(filter-out Snap Camera2,$(PRODUCT_PACKAGES))
 
 PRODUCT_PACKAGES += \
     android.hardware.camera.provider@2.4-impl \
@@ -152,6 +172,16 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.fingerprint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml
+
+# Face Unlock
+PRODUCT_PACKAGES += \
+    FaceUnlockService
+
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    ro.face_unlock_service.enabled=true
+
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.biometrics.face.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/android.hardware.biometrics.face.xml
 
 # Framework detect
 PRODUCT_PACKAGES += \
@@ -298,6 +328,10 @@ DEVICE_PACKAGE_OVERLAYS += \
     $(LOCAL_PATH)/overlay-lineage
 
 PRODUCT_ENFORCE_RRO_TARGETS := *
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/overlay-config.xml:$(TARGET_COPY_OUT_PRODUCT)/overlay/config/config.xml \
+    $(LOCAL_PATH)/wallpaper.png:$(TARGET_COPY_OUT_SYSTEM)/etc/wallpaper.png
 
 # Partitions
 PRODUCT_USE_DYNAMIC_PARTITIONS := true

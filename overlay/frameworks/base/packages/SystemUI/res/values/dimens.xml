@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2026 The LineageOS Project
+    Android 16 Style Navigation Handle (Thick & Long Pill)
+-->
+<resources>
+    <!-- Dimensions for the navigation bar handle (Android 16 style: thick and long pill) -->
+    <dimen name="navigation_handle_radius">2.5dp</dimen>
+    <dimen name="navigation_handle_bottom">8dp</dimen>
+    <dimen name="navigation_home_handle_width">140dp</dimen>
+</resources>

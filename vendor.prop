@@ -100,13 +100,18 @@ persist.vendor.qcom.bluetooth.enable.splita2dp=true
 persist.vendor.qcom.bluetooth.scram.enabled=true
 persist.vendor.qcom.bluetooth.soc=cherokee
 persist.vendor.qcom.bluetooth.twsp_state.enabled=false
-persist.vendor.service.bdroid.sibs=false
 ro.bluetooth.a2dp_offload.supported=true
 ro.vendor.bluetooth.wipower=false
 vendor.qcom.bluetooth.soc=cherokee
 
 # Camera
 camera.disable_zsl_mode=1
+persist.vendor.camera.enableAdvanceFeatures=0x3E7
+persist.vendor.camera.multicam=TRUE
+persist.vendor.camera.multicam.fpsmatch=TRUE
+persist.vendor.camera.multicam.framesync=1
+persist.vendor.camera.multicam.hwsync=TRUE
+persist.vendor.camera.picturesize.limit.enable=false
 
 # Crypto
 ro.crypto.allow_encrypt_override=true

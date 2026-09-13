@@ -74,6 +74,7 @@ vendor/lib64/vendor.qti.hardware.alarm@1.0.so
 vendor/bin/audioflacapp
 vendor/lib/btaudio_offload_if.so
 vendor/lib/liba2dpoffload.so
+vendor/lib/libbthost_if.so
 vendor/lib/libacdb-fts.so
 vendor/lib/libacdbloader.so
 vendor/lib/libacdbrtac.so
@@ -99,6 +100,7 @@ vendor/lib/libspkrprot.so
 vendor/lib/libsurround_3mic_proc.so
 vendor/lib/libtinycompress.so
 vendor/lib64/liba2dpoffload.so
+vendor/lib64/libbthost_if.so
 vendor/lib64/libaudio_log_utils.so
 vendor/lib64/libaudioalsa.so
 vendor/lib64/libbatterylistener.so

@@ -35,4 +35,6 @@
     <!-- Doze: does this device support STATE_DOZE?  -->
     <bool name="doze_display_state_supported">true</bool>
 
+    <!-- Nav bar button default ordering/layout for gestural mode: keep back and ime_switcher under keyboard -->
+    <string name="config_navBarLayoutHandle" translatable="false">back[40AC];home_handle;ime_switcher[40AC]</string>
 </resources>

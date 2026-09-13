@@ -6,16 +6,29 @@ ro.com.google.lens.oem_camera_package=com.android.camera
 ro.charger.enable_suspend=true
 
 # Display
-debug.sf.hw=0
-debug.egl.hw=0
+debug.sf.hw=1
+debug.egl.hw=1
 debug.sf.latch_unsignaled=1
 debug.mdpcomp.logs=0
+# GPU rendering optimizations for gaming
+debug.hwui.renderer=skiagl
+debug.renderengine.backend=skiaglthreaded
+# GPU shader disk cache — persist compiled shaders to avoid recompilation stutter
+ro.hwui.texture_cache_size=72
+ro.hwui.layer_cache_size=48
+ro.hwui.path_cache_size=32
+ro.hwui.gradient_cache_size=1
+ro.hwui.drop_shadow_cache_size=6
+ro.hwui.text_small_cache_width=1024
+ro.hwui.text_small_cache_height=1024
+ro.hwui.text_large_cache_width=2048
+ro.hwui.text_large_cache_height=2048
 vendor.gralloc.disable_ubwc=0
 vendor.display.disable_scaler=0
 vendor.display.disable_excl_rect=0
 vendor.display.disable_excl_rect_partial_fb=1
 vendor.display.comp_mask=0
-debug.sf.disable_client_composition_cache=1
+debug.sf.disable_client_composition_cache=0
 vendor.display.disable_rotator_ubwc=1
 vendor.display.disable_layer_stitch=0
 vendor.display.disable_hw_recovery_dump=1
@@ -27,6 +40,32 @@ persist.sys.fuse.passthrough.enable=true
 # LMKD
 ro.config.low_ram=false
 ro.lmk.log_stats=true
+# LMKD tuning — keep game process alive under memory pressure
+ro.lmk.low=1001
+ro.lmk.medium=800
+ro.lmk.critical=0
+ro.lmk.critical_upgrade=false
+ro.lmk.upgrade_pressure=100
+ro.lmk.downgrade_pressure=100
+ro.lmk.kill_heaviest_task=true
+ro.lmk.kill_timeout_ms=100
+ro.lmk.use_minfree_levels=true
+ro.lmk.use_psi=true
+ro.lmk.psi_partial_stall_ms=200
+ro.lmk.psi_complete_stall_ms=700
+ro.lmk.swap_free_low_percentage=10
+ro.lmk.thrashing_limit=30
+ro.lmk.thrashing_limit_decay=5
+
+# VM tuning for 4GB gaming
+# Reduce swappiness to prevent swap thrashing during gaming (was 100)
+persist.sys.sysctl.swappiness=60
+# Lower vfs_cache_pressure to keep inode/dentry caches longer
+persist.sys.sysctl.vm.vfs_cache_pressure=50
+# Optimize dirty page writeback — flush more often, smaller batches
+persist.sys.dirty_ratio=20
+persist.sys.dirty_background_ratio=5
+persist.sys.dirty_expire_centisecs=200
 
 # Phantom process monitoring
 sys.fflag.override.settings_enable_monitor_phantom_procs=false

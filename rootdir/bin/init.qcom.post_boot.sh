@@ -99,13 +99,14 @@ function configure_memory_parameters() {
             echo 512 > /sys/module/process_reclaim/parameters/per_swap_size
 
     # Set allocstall_threshold to 0 for all targets.
-    # Set swappiness to 100 for all targets
+    # Set swappiness to 60 for gaming (less swap thrashing than 100)
     echo 0 > /sys/module/vmpressure/parameters/allocstall_threshold
-    echo 100 > /proc/sys/vm/swappiness
+    echo 60 > /proc/sys/vm/swappiness
 
-    # Disable wsf for all targets beacause we are using efk.
-    # wsf Range : 1..1000 So set to bare minimum value 1.
-    echo 1 > /proc/sys/vm/watermark_scale_factor
+    # Set watermark_scale_factor to 100 so kswapd wakes up early in background,
+    # preventing synchronous direct reclaim freezes during heavy game asset loads
+    echo 100 > /proc/sys/vm/watermark_scale_factor
+    echo 100 > /proc/sys/vm/vfs_cache_pressure
 
     # Back to default VM settings
     echo 3000 > /proc/sys/vm/dirty_expire_centisecs
@@ -126,28 +127,28 @@ function configure_memory_parameters() {
 
     # Setting b.L scheduler parameters
     # default sched up and down migrate values are 95 and 85
-    echo 65 > /proc/sys/kernel/sched_downmigrate
-    echo 71 > /proc/sys/kernel/sched_upmigrate
-    # default sched up and down migrate values are 100 and 95
-    echo 85 > /proc/sys/kernel/sched_group_downmigrate
-    echo 100 > /proc/sys/kernel/sched_group_upmigrate
+    echo 50 > /proc/sys/kernel/sched_downmigrate
+    echo 60 > /proc/sys/kernel/sched_upmigrate
+    # default sched up and down migrate values are 100 and 95; lower to 75/60 so thread groups migrate promptly
+    echo 60 > /proc/sys/kernel/sched_group_downmigrate
+    echo 75 > /proc/sys/kernel/sched_group_upmigrate
     echo 1 > /proc/sys/kernel/sched_walt_rotate_big_tasks
 
-    #colocation v3 settings
-    echo 740000 > /proc/sys/kernel/sched_little_cluster_coloc_fmin_khz
+    #colocation v3 settings — 1017MHz ensures background asset unpack threads don't stall render pipeline
+    echo 1017600 > /proc/sys/kernel/sched_little_cluster_coloc_fmin_khz
 
     # configure governor settings for little cluster
     echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
     echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
-    echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
+    echo 20000 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
     echo 1248000 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_freq
     echo 576000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 
-    # configure governor settings for big cluster
+    # configure governor settings for big cluster — hispeed at 1.69GHz provides instant response to render bursts
     echo "schedutil" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_governor
     echo 0 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/up_rate_limit_us
-    echo 0 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/down_rate_limit_us
-    echo 1267200 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/hispeed_freq
+    echo 20000 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/down_rate_limit_us
+    echo 1689600 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/hispeed_freq
     echo 652800 > /sys/devices/system/cpu/cpu6/cpufreq/scaling_min_freq
 
     # sched_load_boost as -6 is equivalent to target load as 85. It is per cpu tunable.
@@ -155,11 +156,11 @@ function configure_memory_parameters() {
     echo -6 >  /sys/devices/system/cpu/cpu7/sched_load_boost
     echo 85 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/hispeed_load
 
-    # Enable conservative pl
-    echo 1 > /proc/sys/kernel/sched_conservative_pl
+    # Disable conservative pl for rapid response to render workload spikes
+    echo 0 > /proc/sys/kernel/sched_conservative_pl
 
-    echo "0:1324800" > /sys/module/cpu_boost/parameters/input_boost_freq
-    echo 120 > /sys/module/cpu_boost/parameters/input_boost_ms
+    echo "0:1516800" > /sys/module/cpu_boost/parameters/input_boost_freq
+    echo 200 > /sys/module/cpu_boost/parameters/input_boost_ms
     echo "0:0 1:0 2:0 3:0 4:1804800 5:0 6:0 7:2208000" > /sys/module/cpu_boost/parameters/powerkey_input_boost_freq
     echo 400 > /sys/module/cpu_boost/parameters/powerkey_input_boost_ms
 
@@ -172,31 +173,31 @@ function configure_memory_parameters() {
         for cpubw in $device/*cpu-cpu-llcc-bw/devfreq/*cpu-cpu-llcc-bw
         do
             echo "bw_hwmon" > $cpubw/governor
-            echo 50 > $cpubw/polling_interval
+            echo 16 > $cpubw/polling_interval
             echo "2288 4577 7110 9155 12298 14236" > $cpubw/bw_hwmon/mbps_zones
             echo 4 > $cpubw/bw_hwmon/sample_ms
-            echo 68 > $cpubw/bw_hwmon/io_percent
+            echo 50 > $cpubw/bw_hwmon/io_percent
             echo 20 > $cpubw/bw_hwmon/hist_memory
             echo 0 > $cpubw/bw_hwmon/hyst_length
             echo 80 > $cpubw/bw_hwmon/down_thres
             echo 0 > $cpubw/bw_hwmon/guard_band_mbps
             echo 250 > $cpubw/bw_hwmon/up_scale
-            echo 1600 > $cpubw/bw_hwmon/idle_mbps
+            echo 4577 > $cpubw/bw_hwmon/idle_mbps
         done
 
         for llccbw in $device/*cpu-llcc-ddr-bw/devfreq/*cpu-llcc-ddr-bw
         do
             echo "bw_hwmon" > $llccbw/governor
-            echo 40 > $llccbw/polling_interval
+            echo 16 > $llccbw/polling_interval
             echo "1144 1720 2086 2929 3879 5931 6881 8137" > $llccbw/bw_hwmon/mbps_zones
             echo 4 > $llccbw/bw_hwmon/sample_ms
-            echo 68 > $llccbw/bw_hwmon/io_percent
+            echo 50 > $llccbw/bw_hwmon/io_percent
             echo 20 > $llccbw/bw_hwmon/hist_memory
             echo 0 > $llccbw/bw_hwmon/hyst_length
             echo 80 > $llccbw/bw_hwmon/down_thres
             echo 0 > $llccbw/bw_hwmon/guard_band_mbps
             echo 250 > $llccbw/bw_hwmon/up_scale
-            echo 1600 > $llccbw/bw_hwmon/idle_mbps
+            echo 2929 > $llccbw/bw_hwmon/idle_mbps
         done
 
         for npubw in $device/*npu*-npu-ddr-bw/devfreq/*npu*-npu-ddr-bw
@@ -243,9 +244,9 @@ function configure_memory_parameters() {
     done
 
     # cpuset parameters
-    echo 0-2         > /dev/cpuset/background/cpus
-    echo 0-3         > /dev/cpuset/system-background/cpus
-    echo 0-2,4-7 > /dev/cpuset/foreground/cpus
+    echo 0-3         > /dev/cpuset/background/cpus
+    echo 0-5         > /dev/cpuset/system-background/cpus
+    echo 0-7         > /dev/cpuset/foreground/cpus
     echo 0-7         > /dev/cpuset/top-app/cpus
 
     # Turn off scheduler boost at the end
@@ -253,6 +254,20 @@ function configure_memory_parameters() {
 
     # Turn on sleep modes
     echo 0 > /sys/module/lpm_levels/parameters/sleep_disabled
+
+    # GPU responsiveness: prevent micro-sleeps and bus-latency during render spikes
+    if [ -d /sys/class/kgsl/kgsl-3d0 ]; then
+        echo 80 > /sys/class/kgsl/kgsl-3d0/idle_timer
+        echo 1 > /sys/class/kgsl/kgsl-3d0/force_bus_on
+    fi
+
+    # UFS storage readahead and request depth for stutter-free asset/character streaming
+    for block in /sys/block/sd* /sys/block/dm-*
+    do
+        [ -e "$block/queue/read_ahead_kb" ] && echo 2048 > "$block/queue/read_ahead_kb"
+        [ -e "$block/queue/nr_requests" ] && echo 256 > "$block/queue/nr_requests"
+        [ -e "$block/queue/iostats" ] && echo 0 > "$block/queue/iostats"
+    done
 
 # Post-setup services
         setprop vendor.post_boot.parsed 1

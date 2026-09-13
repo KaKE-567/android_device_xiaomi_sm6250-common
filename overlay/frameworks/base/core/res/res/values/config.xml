@@ -13,6 +13,12 @@
      limitations under the License.
 -->
 <resources>
+    <!-- Specifies the path that is used by AdaptiveIconDrawable class to crop launcher icons. (OneUI Squircle) -->
+    <string name="config_icon_mask" translatable="false">"M50,0 C85,0 100,15 100,50 C100,85 85,100 50,100 C15,100 0,85 0,50 C0,15 15,0 50,0 Z"</string>
+
+    <!-- Flag indicating whether round icons should be parsed from the application manifest. -->
+    <bool name="config_useRoundIcon">false</bool>
+
     <!-- Whether a software navigation bar should be shown. NOTE: in the future this may be
          autodetected from the Configuration. -->
     <bool name="config_showNavigationBar">true</bool>
@@ -29,6 +35,40 @@
          1: 2 button mode (back, home buttons + swipe up for overview)
          2: gestures only for back, home and overview -->
     <integer name="config_navBarInteractionMode">2</integer>
+
+    <!-- Controls whether the nav bar can move from the bottom to the side in landscape.
+         Only applies if the device display is not square. -->
+    <bool name="config_navBarCanMove">true</bool>
+
+    <!-- Controls whether the navigation bar lets through taps. -->
+    <bool name="config_navBarTapThrough">true</bool>
+
+    <!-- Controls the size of the back gesture inset. -->
+    <dimen name="config_backGestureInset">24dp</dimen>
+
+    <!-- Controls whether the navbar needs a scrim with
+         {@link Window#setEnsuringNavigationBarContrastWhenTransparent}. -->
+    <bool name="config_navBarNeedsScrim">false</bool>
+
+    <!-- Controls the opacity of the navigation bar depending on the visibility of the
+         various workspace stacks.
+         0 - Nav bar is always opaque when either the freeform stack or docked stack is visible.
+         1 - Nav bar is always translucent when the freeform stack is visible, otherwise always
+             opaque.
+         2 - Nav bar is never forced opaque.
+         -->
+    <integer name="config_navBarOpacityMode">2</integer>
+
+    <!-- Controls whether seamless rotation should be allowed even though the navbar can move
+         (which normally prevents seamless rotation). -->
+    <bool name="config_allowSeamlessRotationDespiteNavBarMoving">true</bool>
+
+    <!-- Controls whether the side edge gestures can always trigger the transient nav bar to
+         show. -->
+    <bool name="config_navBarAlwaysShowOnSideEdgeGesture">true</bool>
+
+    <!-- Component name for the recents activity: Trebuchet Quickstep -->
+    <string name="config_recentsComponentName" translatable="false">com.android.launcher3/com.android.quickstep.RecentsActivity</string>
 
      <!-- This string array should be overridden by the device to present a list of network
          attributes.  This is used by the connectivity manager to decide which networks can coexist

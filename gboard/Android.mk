@@ -1,0 +1,25 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := Gboard
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := Gboard.apk
+LOCAL_MODULE_CLASS := APPS
+LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+LOCAL_CERTIFICATE := PRESIGNED
+LOCAL_PRODUCT_MODULE := true
+LOCAL_DEX_PREOPT := false
+LOCAL_OVERRIDES_PACKAGES := LatinIME
+
+GBOARD_INSTALL_DIR := $(TARGET_OUT_PRODUCT)/app/Gboard
+
+LOCAL_POST_INSTALL_CMD := \
+	mkdir -p $(GBOARD_INSTALL_DIR)/lib/arm64 && \
+	cp -f $(LOCAL_PATH)/split_config.xxhdpi.apk $(GBOARD_INSTALL_DIR)/ && \
+	cp -f $(LOCAL_PATH)/split_config.xxxhdpi.apk $(GBOARD_INSTALL_DIR)/ && \
+	cp -f $(LOCAL_PATH)/split_dictation_feature_split.apk $(GBOARD_INSTALL_DIR)/ && \
+	cp -f $(LOCAL_PATH)/lib/arm64/*.so $(GBOARD_INSTALL_DIR)/lib/arm64/
+
+$(LOCAL_INSTALLED_MODULE): PRIVATE_POST_INSTALL_CMD := $(LOCAL_POST_INSTALL_CMD)
+
+include $(BUILD_PREBUILT)

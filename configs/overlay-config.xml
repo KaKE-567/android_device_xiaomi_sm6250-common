@@ -1,0 +1,6 @@
+<!--
+    Default overlay configuration for gesture navigation
+-->
+<config>
+    <overlay package="com.android.internal.systemui.navbar.gestural" enabled="true" />
+</config>
