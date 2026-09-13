@@ -99,30 +99,27 @@ function configure_memory_parameters() {
             echo 512 > /sys/module/process_reclaim/parameters/per_swap_size
 
     # Set allocstall_threshold to 0 for all targets.
-    # Set swappiness to 60 for gaming (less swap thrashing than 100)
     echo 0 > /sys/module/vmpressure/parameters/allocstall_threshold
-    echo 60 > /proc/sys/vm/swappiness
+    echo 100 > /proc/sys/vm/swappiness
 
     # Set watermark_scale_factor to 100 so kswapd wakes up early in background,
     # preventing synchronous direct reclaim freezes during heavy game asset loads
     echo 100 > /proc/sys/vm/watermark_scale_factor
-    echo 100 > /proc/sys/vm/vfs_cache_pressure
+    echo 50 > /proc/sys/vm/vfs_cache_pressure
+    echo 24576 > /proc/sys/vm/extra_free_kbytes
 
-    # Back to default VM settings
+    # VM dirty page ratio tuning
     echo 3000 > /proc/sys/vm/dirty_expire_centisecs
-    echo 10 > /proc/sys/vm/dirty_background_ratio
+    echo 5 > /proc/sys/vm/dirty_background_ratio
+    echo 20 > /proc/sys/vm/dirty_ratio
 
 }
 
 #Apply settings for atoll
 
-    # Core control parameters on silver
-    echo 0 0 0 0 1 1 > /sys/devices/system/cpu/cpu0/core_ctl/not_preferred
-    echo 4 > /sys/devices/system/cpu/cpu0/core_ctl/min_cpus
-    echo 60 > /sys/devices/system/cpu/cpu0/core_ctl/busy_up_thres
-    echo 40 > /sys/devices/system/cpu/cpu0/core_ctl/busy_down_thres
-    echo 100 > /sys/devices/system/cpu/cpu0/core_ctl/offline_delay_ms
-    echo 8 > /sys/devices/system/cpu/cpu0/core_ctl/task_thres
+    # Core control parameters on silver - keep all 6 little cores permanently online
+    echo 0 > /sys/devices/system/cpu/cpu0/core_ctl/enable
+    echo 6 > /sys/devices/system/cpu/cpu0/core_ctl/min_cpus
     echo 0 > /sys/devices/system/cpu/cpu6/core_ctl/enable
 
     # Setting b.L scheduler parameters
