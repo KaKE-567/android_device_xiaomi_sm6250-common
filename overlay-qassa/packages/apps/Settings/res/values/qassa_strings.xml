@@ -16,7 +16,7 @@
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
-    <string name="maintainer_name">ghou8s</string>
+    <string name="maintainer_name">KaKe</string>
 
     <string name="xd_device_name_summary">Miatoll</string>
     <string name="xd_chipset_type_summary">Qualcomm Snapdragon 720G</string>

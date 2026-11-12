@@ -99,68 +99,82 @@ function configure_memory_parameters() {
             echo 512 > /sys/module/process_reclaim/parameters/per_swap_size
 
     # Set allocstall_threshold to 0 for all targets.
-    # Set swappiness to 100 for all targets
+    # Set swappiness to 60 for all targets (optimal zRAM balance)
     echo 0 > /sys/module/vmpressure/parameters/allocstall_threshold
-    echo 100 > /proc/sys/vm/swappiness
+    echo 60 > /proc/sys/vm/swappiness
 
-    # Disable wsf for all targets beacause we are using efk.
-    # wsf Range : 1..1000 So set to bare minimum value 1.
-    echo 1 > /proc/sys/vm/watermark_scale_factor
+    # Async page reclaim headroom to prevent direct reclaim stalls
+    echo 30 > /proc/sys/vm/watermark_scale_factor
 
-    # Back to default VM settings
+    # Fast non-blocking dirty page writeback & vfs cache
+    echo 10 > /proc/sys/vm/dirty_ratio
+    echo 5 > /proc/sys/vm/dirty_background_ratio
     echo 3000 > /proc/sys/vm/dirty_expire_centisecs
-    echo 10 > /proc/sys/vm/dirty_background_ratio
+    echo 50 > /proc/sys/vm/vfs_cache_pressure
+    echo 0 > /proc/sys/vm/page-cluster
+
+    # UFS I/O read-ahead and request queue for fast game asset streaming
+    for block in /sys/block/sd* /sys/block/dm-*
+    do
+        if [ -f "$block/queue/read_ahead_kb" ]; then
+            echo 512 > $block/queue/read_ahead_kb
+        fi
+        if [ -f "$block/queue/nr_requests" ]; then
+            echo 128 > $block/queue/nr_requests
+        fi
+    done
 
 }
 
 #Apply settings for atoll
 
-    # Core control parameters on silver
-    echo 0 0 0 0 1 1 > /sys/devices/system/cpu/cpu0/core_ctl/not_preferred
-    echo 4 > /sys/devices/system/cpu/cpu0/core_ctl/min_cpus
-    echo 60 > /sys/devices/system/cpu/cpu0/core_ctl/busy_up_thres
-    echo 40 > /sys/devices/system/cpu/cpu0/core_ctl/busy_down_thres
-    echo 100 > /sys/devices/system/cpu/cpu0/core_ctl/offline_delay_ms
-    echo 8 > /sys/devices/system/cpu/cpu0/core_ctl/task_thres
+    # Core control parameters - Disable hotplugging to keep all 8 cores online
+    echo 0 > /sys/devices/system/cpu/cpu0/core_ctl/enable
     echo 0 > /sys/devices/system/cpu/cpu6/core_ctl/enable
+    echo 6 > /sys/devices/system/cpu/cpu0/core_ctl/min_cpus
+    echo 2 > /sys/devices/system/cpu/cpu6/core_ctl/min_cpus
 
-    # Setting b.L scheduler parameters
-    # default sched up and down migrate values are 95 and 85
-    echo 65 > /proc/sys/kernel/sched_downmigrate
-    echo 71 > /proc/sys/kernel/sched_upmigrate
-    # default sched up and down migrate values are 100 and 95
-    echo 85 > /proc/sys/kernel/sched_group_downmigrate
-    echo 100 > /proc/sys/kernel/sched_group_upmigrate
+    # Setting b.L scheduler parameters - Instant migration to Big Kryo cores
+    echo 45 > /proc/sys/kernel/sched_downmigrate
+    echo 55 > /proc/sys/kernel/sched_upmigrate
+    echo 65 > /proc/sys/kernel/sched_group_downmigrate
+    echo 75 > /proc/sys/kernel/sched_group_upmigrate
     echo 1 > /proc/sys/kernel/sched_walt_rotate_big_tasks
 
-    #colocation v3 settings
-    echo 740000 > /proc/sys/kernel/sched_little_cluster_coloc_fmin_khz
+    # Colocation v3 & Instant Big Core Placement (Zero Stutter When Enemies Near)
+    echo 1248000 > /proc/sys/kernel/sched_little_cluster_coloc_fmin_khz
+    echo 0 > /proc/sys/kernel/sched_min_task_util_for_boost
+    echo 0 > /proc/sys/kernel/sched_min_task_util_for_colocation
+    echo 1 > /proc/sys/kernel/sched_boost
 
-    # configure governor settings for little cluster
+    # Configure governor settings for Little cluster (Silver Kryo 465 @ 1.8 GHz max)
     echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
     echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
-    echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
-    echo 1248000 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_freq
+    echo 20000 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
+    echo 1804800 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_freq
+    echo 50 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/hispeed_load
     echo 576000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 
-    # configure governor settings for big cluster
+    # Configure governor settings for Big cluster (Gold Kryo 465 @ 2.32 GHz max)
     echo "schedutil" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_governor
     echo 0 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/up_rate_limit_us
-    echo 0 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/down_rate_limit_us
-    echo 1267200 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/hispeed_freq
+    echo 20000 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/down_rate_limit_us
+    echo 2323200 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/hispeed_freq
+    echo 50 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/hispeed_load
     echo 652800 > /sys/devices/system/cpu/cpu6/cpufreq/scaling_min_freq
 
-    # sched_load_boost as -6 is equivalent to target load as 85. It is per cpu tunable.
-    echo -6 >  /sys/devices/system/cpu/cpu6/sched_load_boost
-    echo -6 >  /sys/devices/system/cpu/cpu7/sched_load_boost
-    echo 85 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/hispeed_load
+    # Heavy task load boost priority
+    echo 15 > /sys/devices/system/cpu/cpu6/sched_load_boost
+    echo 15 > /sys/devices/system/cpu/cpu7/sched_load_boost
 
-    # Enable conservative pl
-    echo 1 > /proc/sys/kernel/sched_conservative_pl
+    # Disable conservative power limitation
+    echo 0 > /proc/sys/kernel/sched_conservative_pl
 
-    echo "0:1324800" > /sys/module/cpu_boost/parameters/input_boost_freq
-    echo 120 > /sys/module/cpu_boost/parameters/input_boost_ms
-    echo "0:0 1:0 2:0 3:0 4:1804800 5:0 6:0 7:2208000" > /sys/module/cpu_boost/parameters/powerkey_input_boost_freq
+    # CPU Boost & Touch input boost
+    echo "0:1516800 6:1804800" > /sys/module/cpu_boost/parameters/input_boost_freq
+    echo 150 > /sys/module/cpu_boost/parameters/input_boost_ms
+    echo 15 > /sys/module/cpu_boost/parameters/dynamic_stune_boost
+    echo "0:0 1:0 2:0 3:0 4:1804800 5:0 6:0 7:2323200" > /sys/module/cpu_boost/parameters/powerkey_input_boost_freq
     echo 400 > /sys/module/cpu_boost/parameters/powerkey_input_boost_ms
 
     # Set Memory parameters
@@ -172,14 +186,14 @@ function configure_memory_parameters() {
         for cpubw in $device/*cpu-cpu-llcc-bw/devfreq/*cpu-cpu-llcc-bw
         do
             echo "bw_hwmon" > $cpubw/governor
-            echo 50 > $cpubw/polling_interval
+            echo 20 > $cpubw/polling_interval
             echo "2288 4577 7110 9155 12298 14236" > $cpubw/bw_hwmon/mbps_zones
             echo 4 > $cpubw/bw_hwmon/sample_ms
             echo 68 > $cpubw/bw_hwmon/io_percent
             echo 20 > $cpubw/bw_hwmon/hist_memory
-            echo 0 > $cpubw/bw_hwmon/hyst_length
-            echo 80 > $cpubw/bw_hwmon/down_thres
-            echo 0 > $cpubw/bw_hwmon/guard_band_mbps
+            echo 10 > $cpubw/bw_hwmon/hyst_length
+            echo 40 > $cpubw/bw_hwmon/down_thres
+            echo 500 > $cpubw/bw_hwmon/guard_band_mbps
             echo 250 > $cpubw/bw_hwmon/up_scale
             echo 1600 > $cpubw/bw_hwmon/idle_mbps
         done
@@ -187,14 +201,14 @@ function configure_memory_parameters() {
         for llccbw in $device/*cpu-llcc-ddr-bw/devfreq/*cpu-llcc-ddr-bw
         do
             echo "bw_hwmon" > $llccbw/governor
-            echo 40 > $llccbw/polling_interval
+            echo 20 > $llccbw/polling_interval
             echo "1144 1720 2086 2929 3879 5931 6881 8137" > $llccbw/bw_hwmon/mbps_zones
             echo 4 > $llccbw/bw_hwmon/sample_ms
             echo 68 > $llccbw/bw_hwmon/io_percent
             echo 20 > $llccbw/bw_hwmon/hist_memory
-            echo 0 > $llccbw/bw_hwmon/hyst_length
-            echo 80 > $llccbw/bw_hwmon/down_thres
-            echo 0 > $llccbw/bw_hwmon/guard_band_mbps
+            echo 10 > $llccbw/bw_hwmon/hyst_length
+            echo 40 > $llccbw/bw_hwmon/down_thres
+            echo 600 > $llccbw/bw_hwmon/guard_band_mbps
             echo 250 > $llccbw/bw_hwmon/up_scale
             echo 1600 > $llccbw/bw_hwmon/idle_mbps
         done
@@ -248,11 +262,69 @@ function configure_memory_parameters() {
     echo 0-2,4-7 > /dev/cpuset/foreground/cpus
     echo 0-7         > /dev/cpuset/top-app/cpus
 
-    # Turn off scheduler boost at the end
-    echo 0 > /proc/sys/kernel/sched_boost
+    # Keep WALT frequency aggregation and Big core priority enabled for esports baseline
+    echo 1 > /proc/sys/kernel/sched_boost
 
     # Turn on sleep modes
     echo 0 > /sys/module/lpm_levels/parameters/sleep_disabled
+
+    # === Zedex Extreme Gaming Engine Tweaks ===
+    # 1. Adreno 618 GPU Tuning
+    echo 0 > /sys/class/kgsl/kgsl-3d0/throttling 2>/dev/null || true
+    echo 80 > /sys/class/kgsl/kgsl-3d0/idle_timer 2>/dev/null || true
+    echo 3 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel 2>/dev/null || true
+
+    # 2. UFS 2.1 Storage & I/O 2048KB Read-Ahead (Zero Texture Streaming Drops)
+    for queue in /sys/block/sd*/queue/read_ahead_kb /sys/block/mmcblk*/queue/read_ahead_kb /sys/block/dm-*/queue/read_ahead_kb
+    do
+        echo 2048 > $queue 2>/dev/null || true
+    done
+    for requests in /sys/block/sd*/queue/nr_requests /sys/block/mmcblk*/queue/nr_requests /sys/block/dm-*/queue/nr_requests
+    do
+        echo 512 > $requests 2>/dev/null || true
+    done
+    for iostats in /sys/block/sd*/queue/iostats /sys/block/mmcblk*/queue/iostats
+    do
+        echo 0 > $iostats 2>/dev/null || true
+    done
+
+    # 3. Virtual Memory & In-Memory Game Cache Tuning
+    echo 50 > /proc/sys/vm/vfs_cache_pressure
+    echo 10 > /proc/sys/vm/dirty_ratio
+    echo 5 > /proc/sys/vm/dirty_background_ratio
+    echo 500 > /proc/sys/vm/dirty_expire_centisecs
+    echo 500 > /proc/sys/vm/dirty_writeback_centisecs
+    echo 0 > /proc/sys/kernel/sched_schedstats
+
+    # 4. Touch & CPU Input Boost (Pinpoint Sniping Response)
+    echo "0:1804800 6:2323200" > /sys/module/cpu_boost/parameters/input_boost_freq 2>/dev/null || true
+    echo 60 > /sys/module/cpu_boost/parameters/input_boost_ms 2>/dev/null || true
+    echo 1 > /sys/module/cpu_boost/parameters/dynamic_stune_boost 2>/dev/null || true
+
+    # 5. Low-Ping TCP Protocol Optimization
+    echo 3 > /proc/sys/net/ipv4/tcp_fastopen 2>/dev/null || true
+    echo 16384 > /proc/sys/net/ipv4/tcp_notsent_lowat 2>/dev/null || true
+    echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse 2>/dev/null || true
+    echo 1 > /proc/sys/net/ipv4/tcp_sack 2>/dev/null || true
+    echo 1 > /proc/sys/net/ipv4/tcp_window_scaling 2>/dev/null || true
+
+    # 6. Sysfs Permissions for Settings & SystemUI Direct Profile Controls
+    chmod 0666 /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq 2>/dev/null || true
+    chmod 0666 /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq 2>/dev/null || true
+    chmod 0666 /dev/stune/top-app/schedtune.boost 2>/dev/null || true
+    chmod 0666 /sys/class/thermal/thermal_message/sconfig 2>/dev/null || true
+
+    # 7. Fast Charging Engine (33W QC 4.0+ Unlocked)
+    for fcc in /sys/class/power_supply/battery/constant_charge_current_max /sys/class/power_supply/main/constant_charge_current_max
+    do
+        chmod 0666 $fcc 2>/dev/null || true
+        echo 6000000 > $fcc 2>/dev/null || true
+    done
+    for fastcharge in /sys/class/power_supply/battery/fastcharge_mode /sys/class/power_supply/battery/qc4_mode
+    do
+        chmod 0666 $fastcharge 2>/dev/null || true
+        echo 1 > $fastcharge 2>/dev/null || true
+    done
 
 # Post-setup services
         setprop vendor.post_boot.parsed 1

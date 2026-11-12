@@ -13,6 +13,9 @@
      limitations under the License.
 -->
 <resources>
+    <!-- Whether the smart battery feature should be offered on this device -->
+    <bool name="config_smart_battery_available">true</bool>
+
     <!-- Whether a software navigation bar should be shown. NOTE: in the future this may be
          autodetected from the Configuration. -->
     <bool name="config_showNavigationBar">true</bool>
@@ -291,7 +294,7 @@
          @see https://www.w3.org/TR/SVG/paths.html#PathData
     -->
     <string translatable="false" name="config_mainBuiltInDisplayCutout">
-        M 0,58 a 32,32 0 1 0 64,0 32,32 0 1 0 -64,0 Z
+        M -32,58 a 32,32 0 1 0 64,0 32,32 0 1 0 -64,0 Z
     </string>
 
     <!-- Like config_mainBuiltInDisplayCutout, but this path is used to report the
@@ -301,9 +304,9 @@
          config_mainBuiltInDisplayCutout
          -->
     <string name="config_mainBuiltInDisplayCutoutRectApproximation">
-        M 0.0,0.0
+        M -32.0,0.0
         h 64
-        v 100
+        v 90
         h -64
         Z
     </string>

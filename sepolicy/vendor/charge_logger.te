@@ -1,0 +1,16 @@
+type charge_logger, domain;
+type charge_logger_exec, exec_type, vendor_file_type, file_type;
+type charge_logger_data_file, file_type, data_file_type;
+
+init_daemon_domain(charge_logger)
+
+r_dir_file(charge_logger, sysfs_battery_supply)
+r_dir_file(charge_logger, sysfs_usb_supply)
+
+allow charge_logger sysfs_wake_lock:file rw_file_perms;
+
+allow charge_logger charge_logger_data_file:dir create_dir_perms;
+allow charge_logger charge_logger_data_file:file create_file_perms;
+
+allow charge_logger self:netlink_kobject_uevent_socket create_socket_perms_no_ioctl;
+wakelock_use(charge_logger)

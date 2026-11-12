@@ -1,0 +1,4 @@
+allow vold_prepare_subdirs unlabeled:dir { open read write add_name remove_name rmdir relabelfrom getattr search setattr };
+allow vold_prepare_subdirs unlabeled:file { getattr unlink relabelfrom };
+allow vold_prepare_subdirs vendor_data_file:dir { getattr setattr };
+allow vold_prepare_subdirs system_data_file:dir { getattr setattr };
