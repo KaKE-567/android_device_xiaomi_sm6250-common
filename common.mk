@@ -33,15 +33,15 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml
 
-# FM
-PRODUCT_PACKAGES += \
-    FM2 \
-    libqcomfm_jni \
-    qcom.fmradio \
-    qcom.fmradio.xml
+# FM (Disabled for esports debloat)
+# PRODUCT_PACKAGES += \
+#     FM2 \
+#     libqcomfm_jni \
+#     qcom.fmradio \
+#     qcom.fmradio.xml
 
-PRODUCT_BOOT_JARS += \
-    qcom.fmradio
+# PRODUCT_BOOT_JARS += \
+#     qcom.fmradio
 
 # AVB
 PRODUCT_PACKAGES += \
@@ -58,8 +58,7 @@ TARGET_SCREEN_HEIGHT := 2400
 TARGET_SCREEN_WIDTH := 1080
 
 # Camera
-PRODUCT_PACKAGES += \
-    Snap
+# Snap replaced by ANXCamera
 
 PRODUCT_PACKAGES += \
     libshim_megvii
@@ -196,3 +195,7 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_BOOT_JARS += \
     WfdCommon
+
+# Explicitly strip bloatware packages
+PRODUCT_PACKAGES := $(filter-out AudioFX ExactCalculator Calculator Calendar Etar Camera2 Snap DeskClock Contacts FMRadio FM2 Messaging messaging Recorder Ymusic,$(PRODUCT_PACKAGES))
+
